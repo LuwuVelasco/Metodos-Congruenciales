@@ -3,45 +3,70 @@ import Navbar from "../components/Navbar";
 import { Tooltip } from "react-tooltip";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import Swal from "sweetalert2";
 import "./MetodoLineal.css";
 
 const MetodoLineal = () => {
   const [x0, setX0] = useState(0);
+  const [k, setK] = useState(0);
+  const [c, setC] = useState(0);
   const [p, setP] = useState(0);
   const [decimales, setDecimales] = useState(2);
   const [tabla, setTabla] = useState([]);
-
-  const [g, setG] = useState(null);
-  const [k, setK] = useState(null);
-  const [a, setA] = useState(null);
   const [m, setM] = useState(null);
-  const [c, setC] = useState(null);
+  const [g, setG] = useState(null);
+  const [a, setA] = useState(null);
 
   const campos = [
-    { label: "X₀", value: x0, set: setX0, info: "Valor inicial de la serie pseudoaleatoria / Semilla" },
+    { label: "X₀", value: x0, set: setX0, info: "Valor inicial de la serie pseudoaleatoria" },
+    { label: "K", value: k, set: setK, info: "Constante multiplicativa del método" },
+    { label: "C", value: c, set: setC, info: "Constante aditiva del método" },
     { label: "P", value: p, set: setP, info: "Cantidad de números a generar" },
     { label: "Decimales", value: decimales, set: setDecimales, info: "Cantidad de decimales de rᵢ" },
   ];
 
+  const mcd = (a, b) => (b === 0 ? a : mcd(b, a % b));
+
   const calcularLineal = () => {
-    let g = Math.log(p) / Math.log(2);
-    let k = g;
+    if (p <= 0) {
+      Swal.fire("Error", "Debes ingresar un valor P > 0", "error");
+      return;
+    }
+
+    if (!Number.isInteger(k)) {
+      Swal.fire("Error", "K debe ser un número entero", "error");
+      return;
+    }
+
+    let g = Math.ceil(Math.log(p) / Math.log(2));
     let a = 1 + 4 * k;
     let m = Math.pow(2, g);
-    let c = hallarPrimoRelativo(m);
-    let tempTabla = [];
-    let xi = x0;
+
+    if (a % 2 === 0) {
+      Swal.fire("Error", "a debe ser impar (1 + 4k)", "error");
+      return;
+    }
+
+    if (c <= 0 || mcd(c, m) !== 1) {
+      Swal.fire(
+        "Error",
+        `C debe ser > 0 y relativamente primo con m = ${m}`,
+        "error"
+      );
+      return;
+    }
 
     setG(g);
-    setK(k);
     setA(a);
     setM(m);
-    setC(c);
+
+    let tempTabla = [];
+    let xi = x0;
 
     for (let i = 1; i <= p + 1; i++) {
       let op = `(${a} * ${xi} + ${c}) MOD ${m}`;
       let xiNext = (a * xi + c) % m;
-      let ri = +(xiNext / (m-1)).toFixed(decimales);
+      let ri = +(xiNext / (m - 1)).toFixed(decimales);
       tempTabla.push({ i, xi_1: xi, operacion: op, xi: xiNext, ri });
       xi = xiNext;
     }
@@ -49,44 +74,16 @@ const MetodoLineal = () => {
     setTabla(tempTabla);
   };
 
-  const esPrimo = (num) => {
-    if (num < 2) return false;
-      for (let i = 2; i <= Math.sqrt(num); i++) {
-        if (num % i === 0) return false;
-      }
-    return true;
-  };
-
-  const hallarPrimoRelativo = (m) => {
-    let primoMenor, primoMayor, posicionMenor, posicionMayor;
-    for (let i = m - 1; i >= 2; i--) {
-      if (esPrimo(i)) {
-        primoMenor = i;
-        posicionMenor = m - i;
-        break;
-      }
-    }
-    for (let i = m + 1; ; i++) {
-      if (esPrimo(i)) {
-        primoMayor = i;
-        posicionMayor = i - m;
-        break;
-      }
-    }
-    return posicionMenor <= posicionMayor ? primoMenor : primoMayor;
-  }
-
   const limpiar = () => {
     setTabla([]);
     setX0(0);
     setP(0);
+    setC(0);
+    setK(0);
     setDecimales(2);
-
-    setG(null);
-    setK(null);
-    setA(null);
     setM(null);
-    setC(null);
+    setG(null);
+    setA(null);
   };
 
   const exportarExcel = async () => {
@@ -119,8 +116,7 @@ const MetodoLineal = () => {
                   onChange={(e) => campo.set(Number(e.target.value))}
                 />
                 <span data-tooltip-id={`tooltip-${idx}`}>🛈</span>
-                {/*Tooltip aparece encima de la tabla*/}
-                <Tooltip id={`tooltip-${idx}`} place="right" effect="solid"> 
+                <Tooltip id={`tooltip-${idx}`} place="right" effect="solid">
                   {campo.info}
                 </Tooltip>
               </React.Fragment>
@@ -135,85 +131,69 @@ const MetodoLineal = () => {
 
           <div className="Calculo-info">
             <div className="Calculo-info-item">
-                <span data-tooltip-id="tooltip-g">🛈</span>
-                <Tooltip id="tooltip-g" place="left" effect="solid">
+              <span data-tooltip-id="tooltip-g">🛈</span>
+              <Tooltip id="tooltip-g" place="left" effect="solid">
                 g = Se usa para definir el módulo del generador m.
-                </Tooltip>
-                <strong>g =</strong> {g !== null ? g.toFixed(2) : "-"}
+              </Tooltip>
+              <strong>g =</strong> {g !== null ? g : "-"}
             </div>
 
             <div className="Calculo-info-item">
-                <span data-tooltip-id="tooltip-k">🛈</span>
-                <Tooltip id="tooltip-k" place="right" effect="solid">
-                k = Se usa para definir el multiplicador a.
-                </Tooltip>
-                <strong>k =</strong> {k !== null ? k.toFixed(2) : "-"}
-            </div>
-
-            <div className="Calculo-info-item">
-                <span data-tooltip-id="tooltip-a">🛈</span>
-                <Tooltip id="tooltip-a" place="right" effect="solid">
+              <span data-tooltip-id="tooltip-a">🛈</span>
+              <Tooltip id="tooltip-a" place="right" effect="solid">
                 a = Constante multiplicativa.
-                </Tooltip>
-                <strong>a =</strong> {a !== null ? a : "-"}
+              </Tooltip>
+              <strong>a =</strong> {a !== null ? a : "-"}
             </div>
 
             <div className="Calculo-info-item">
-                <span data-tooltip-id="tooltip-m">🛈</span>
-                <Tooltip id="tooltip-m" place="right" effect="solid">
+              <span data-tooltip-id="tooltip-m">🛈</span>
+              <Tooltip id="tooltip-m" place="right" effect="solid">
                 m = Módulo del generador.
-                </Tooltip>
-                <strong>m =</strong> {m !== null ? m : "-"}
-            </div>
-
-            <div className="Calculo-info-item">
-                <span data-tooltip-id="tooltip-c">🛈</span>
-                <Tooltip id="tooltip-c" place="right" effect="solid">
-                c = Constante aditiva.
-                </Tooltip>
-                <strong>c =</strong> {c !== null ? c : "-"}
+              </Tooltip>
+              <strong>m =</strong> {m !== null ? m : "-"}
             </div>
           </div>
         </div>
 
         <div className="table-container">
           <table>
-              <thead>
+            <thead>
               <tr>
-                  <th>i</th>
-                  <th>Xᵢ₋₁</th>
-                  <th>Operación</th>
-                  <th>Xᵢ</th>
-                  <th>rᵢ</th>
+                <th>i</th>
+                <th>Xᵢ₋₁</th>
+                <th>Operación</th>
+                <th>Xᵢ</th>
+                <th>rᵢ</th>
               </tr>
-              </thead>
-              <tbody>
-                {tabla.length > 0 ? (
-                    tabla.map((row, idx) => {
-                    const isFirst = idx === 0;
-                    const isLast = idx === tabla.length - 1;
+            </thead>
+            <tbody>
+              {tabla.length > 0 ? (
+                tabla.map((row, idx) => {
+                  const isFirst = idx === 0;
+                  const isLast = idx === tabla.length - 1;
 
-                    return (
-                        <tr
-                        key={idx}
-                        className={`${isFirst ? "highlight-first" : ""} ${isLast ? "highlight-last" : ""}`}
-                        >
-                        <td>{row.i}</td>
-                        <td>{row.xi_1}</td>
-                        <td>{row.operacion}</td>
-                        <td>{row.xi}</td>
-                        <td>{row.ri}</td>
-                        </tr>
-                    );
-                    })
-                ) : (
-                    <tr>
-                    <td colSpan="5" style={{ textAlign: "center", color: "#777" }}>
-                        No hay datos
-                    </td>
+                  return (
+                    <tr
+                      key={idx}
+                      className={`${isFirst ? "highlight-first" : ""} ${isLast ? "highlight-last" : ""}`}
+                    >
+                      <td>{row.i}</td>
+                      <td>{row.xi_1}</td>
+                      <td>{row.operacion}</td>
+                      <td>{row.xi}</td>
+                      <td>{row.ri}</td>
                     </tr>
-                )}
-                </tbody>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center", color: "#777" }}>
+                    No hay datos
+                  </td>
+                </tr>
+              )}
+            </tbody>
           </table>
         </div>
       </div>
@@ -225,10 +205,10 @@ const MetodoLineal = () => {
         <ol>
             <li>Elegir la semilla inicial <strong>X₀</strong>.</li>
             <li>Calcular <strong>g = log(P) / log(2) </strong> con P = cantidad de números a generar.</li>
-            <li>Definir <strong>k = g</strong>.</li>
+            {/*<li>Definir <strong>k = g</strong>.</li>*/}
             <li>Calcular la constante multiplicativa <strong>a = 1 + 4k</strong>.</li>
             <li>Definir el módulo <strong>m = 2^g</strong>.</li>
-            <li>Hallar <strong>c</strong>, un número primo relativo cercano a m.</li>
+            {/*<li>Hallar <strong>c</strong>, un número primo relativo cercano a m.</li>*/}
             <li>Aplicar la fórmula:  
             <code>Xᵢ = (a * Xᵢ₋₁ + c) mod m</code>
             </li>
