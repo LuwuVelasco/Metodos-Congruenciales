@@ -221,6 +221,10 @@ const MetodoMultiplicativo = () => {
             Una buena elección garantiza ciclos largos y una distribución uniforme en [0,1).
         </p>
       </div>
+
+      <footer>
+        <p>Creado por: <strong>Luciana Velasco Ponce</strong> | Modelado, Dinámica de Sistemas y Simulación</p>
+      </footer>
     </>
   );
 };

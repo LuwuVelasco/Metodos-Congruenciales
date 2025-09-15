@@ -228,7 +228,11 @@ const MetodoLineal = () => {
             parámetros <strong>a</strong>, <strong>c</strong>, <strong>m</strong> y de la semilla <strong>X₀</strong>.  
             Una buena elección garantiza ciclos largos y una distribución uniforme en [0,1).
         </p>
-        </div>
+      </div>
+
+      <footer>
+        <p>Creado por: <strong>Luciana Velasco Ponce</strong> | Modelado, Dinámica de Sistemas y Simulación</p>
+      </footer>
     </>
   );
 };
