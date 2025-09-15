@@ -149,12 +149,12 @@
 }
 
 .highlight-first {
-  background-color: #548b61; /* verde suave */
+  background-color: #548b61;
   font-weight: bold;
 }
 
 .highlight-last {
-  background-color: #7e4247; /* rojo suave */
+  background-color: #7e4247;
   font-weight: bold;
 }
 

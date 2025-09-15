@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Tooltip } from "react-tooltip";
 import ExcelJS from "exceljs";
@@ -7,6 +7,10 @@ import Swal from "sweetalert2";
 import "./MetodoLineal.css";
 
 const MetodoLineal = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const [x0, setX0] = useState(0);
   const [k, setK] = useState(0);
   const [c, setC] = useState(0);
