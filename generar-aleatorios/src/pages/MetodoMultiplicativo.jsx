@@ -43,6 +43,11 @@ const MetodoMultiplicativo = () => {
       return;
     }
 
+    if (x0 % 2 === 0) {
+        Swal.fire("Error", "X₀ debe ser impar", "error");
+        return;
+    }
+
     let g = Math.ceil((Math.log(p) / Math.log(2)) + 2);
     let a = 5 + 8 * k;
     let m = Math.pow(2, g);
